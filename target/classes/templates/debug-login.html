@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Login - EduChat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .debug-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { border-color: #28a745; background-color: #d4edda; }
+        .error { border-color: #dc3545; background-color: #f8d7da; }
+        .info { border-color: #17a2b8; background-color: #d1ecf1; }
+        .step-card {
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .step-header {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            margin: -1px -1px 15px -1px;
+            border-radius: 8px 8px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h3><i class="fas fa-bug"></i> Login Debug Tool</h3>
+                        <p class="mb-0">Comprehensive login troubleshooting</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <!-- Step 1: Database Status -->
+            <div class="col-md-6">
+                <div class="step-card">
+                    <div class="step-header">
+                        <h5>🗄️ Step 1: Check Database</h5>
+                    </div>
+                    <div class="p-3">
+                        <button class="btn btn-primary btn-lg w-100" onclick="checkDatabase()">
+                            <i class="fas fa-database"></i> Check Database Status
+                        </button>
+                        <div id="databaseResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Create Fresh Admin -->
+            <div class="col-md-6">
+                <div class="step-card">
+                    <div class="step-header">
+                        <h5>👤 Step 2: Create Fresh Admin</h5>
+                    </div>
+                    <div class="p-3">
+                        <button class="btn btn-warning btn-lg w-100" onclick="createFreshAdmin()">
+                            <i class="fas fa-user-plus"></i> Create Fresh Admin
+                        </button>
+                        <div id="adminResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Step 3: Test Password Encoding -->
+            <div class="col-md-6">
+                <div class="step-card">
+                    <div class="step-header">
+                        <h5>🔐 Step 3: Test Password Encoding</h5>
+                    </div>
+                    <div class="p-3">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="testPassword" value="password123" placeholder="Password to test">
+                            <button class="btn btn-info" onclick="testPasswordEncoding()">
+                                <i class="fas fa-key"></i> Test Encoding
+                            </button>
+                        </div>
+                        <div id="encodingResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Direct Login Test -->
+            <div class="col-md-6">
+                <div class="step-card">
+                    <div class="step-header">
+                        <h5>🔓 Step 4: Direct Login Test</h5>
+                    </div>
+                    <div class="p-3">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <input type="text" class="form-control" id="directUsername" value="admin" placeholder="Username">
+                            </div>
+                            <div class="col-6">
+                                <input type="password" class="form-control" id="directPassword" value="password123" placeholder="Password">
+                            </div>
+                        </div>
+                        <button class="btn btn-success btn-lg w-100" onclick="directLoginTest()">
+                            <i class="fas fa-sign-in-alt"></i> Direct Login Test
+                        </button>
+                        <div id="directResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Step 5: Full Login Test -->
+            <div class="col-12">
+                <div class="step-card">
+                    <div class="step-header">
+                        <h5>🚀 Step 5: Full Login Test (via API)</h5>
+                    </div>
+                    <div class="p-3">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="fullUsername" value="admin" placeholder="Username">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="password" class="form-control" id="fullPassword" value="password123" placeholder="Password">
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-danger btn-lg w-100" onclick="fullLoginTest()">
+                                    <i class="fas fa-rocket"></i> Full Login Test
+                                </button>
+                            </div>
+                        </div>
+                        <div id="fullResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🎯 Quick Actions</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <a href="/login" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-sign-in-alt"></i> Go to Login Page
+                        </a>
+                        <button class="btn btn-secondary btn-lg me-3" onclick="runAllTests()">
+                            <i class="fas fa-play"></i> Run All Tests
+                        </button>
+                        <button class="btn btn-info btn-lg" onclick="clearAllResults()">
+                            <i class="fas fa-eraser"></i> Clear Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkDatabase() {
+            const resultDiv = document.getElementById('databaseResult');
+            resultDiv.innerHTML = '<div class="debug-box info">🔄 Checking database...</div>';
+            
+            try {
+                const response = await fetch('/api/debug/database-status');
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="debug-box success">
+✅ DATABASE STATUS:
+
+Total Users: ${result.totalUsers}
+Admin Exists: ${result.adminExists}
+${result.adminExists ? `Admin Active: ${result.adminActive}
+Admin Role: ${result.adminRole}` : ''}
+
+USERS:
+${result.users.map(user => 
+`- ${user.username} (${user.role}) - Active: ${user.active}
+  Hash: ${user.passwordHashPreview}`
+).join('\n')}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="debug-box error">❌ Database Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-box error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function createFreshAdmin() {
+            const resultDiv = document.getElementById('adminResult');
+            resultDiv.innerHTML = '<div class="debug-box info">🔄 Creating fresh admin...</div>';
+            
+            try {
+                const response = await fetch('/api/debug/create-fresh-admin', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="debug-box success">
+✅ FRESH ADMIN CREATED:
+
+Admin ID: ${result.adminId}
+Username: ${result.username}
+Password Verification: ${result.passwordVerification}
+
+New Hash: ${result.newPasswordHash}
+
+✅ You can now login with:
+   Username: admin
+   Password: password123
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="debug-box error">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-box error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testPasswordEncoding() {
+            const password = document.getElementById('testPassword').value;
+            const resultDiv = document.getElementById('encodingResult');
+            resultDiv.innerHTML = '<div class="debug-box info">🔄 Testing password encoding...</div>';
+            
+            try {
+                const response = await fetch(`/api/debug/test-password-encoding?password=${password}`, { method: 'POST' });
+                const result = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="debug-box ${result.allMatches ? 'success' : 'error'}">
+🔐 PASSWORD ENCODING TEST:
+
+Original: ${result.originalPassword}
+
+Hash 1: ${result.hash1}
+Match 1: ${result.match1}
+
+Hash 2: ${result.hash2}
+Match 2: ${result.match2}
+
+Hash 3: ${result.hash3}
+Match 3: ${result.match3}
+
+All Matches: ${result.allMatches}
+
+${result.allMatches ? '✅ Password encoding works correctly!' : '❌ Password encoding has issues!'}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-box error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function directLoginTest() {
+            const username = document.getElementById('directUsername').value;
+            const password = document.getElementById('directPassword').value;
+            const resultDiv = document.getElementById('directResult');
+            resultDiv.innerHTML = '<div class="debug-box info">🔄 Testing direct login...</div>';
+            
+            try {
+                const response = await fetch(`/api/debug/direct-login-test?username=${username}&password=${password}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success && result.passwordMatches) {
+                    resultDiv.innerHTML = `
+                        <div class="debug-box success">
+✅ DIRECT LOGIN TEST PASSED:
+
+Username: ${result.username}
+User Found: ${result.userFound}
+User Active: ${result.userActive}
+User Role: ${result.userRole}
+Password Matches: ${result.passwordMatches}
+
+Input Password: ${result.inputPassword}
+Stored Hash: ${result.storedHash}
+
+✅ Basic authentication should work!
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="debug-box error">
+❌ DIRECT LOGIN TEST FAILED:
+
+${result.error || 'Password mismatch or user issues'}
+
+User Found: ${result.userFound || false}
+Password Matches: ${result.passwordMatches || false}
+User Active: ${result.userActive || false}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-box error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function fullLoginTest() {
+            const username = document.getElementById('fullUsername').value;
+            const password = document.getElementById('fullPassword').value;
+            const resultDiv = document.getElementById('fullResult');
+            resultDiv.innerHTML = '<div class="debug-box info">🔄 Testing full login via API...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="debug-box success">
+🚀 FULL LOGIN SUCCESS:
+
+Status: ${response.status}
+Token: ${result.token ? result.token.substring(0, 50) + '...' : 'N/A'}
+Username: ${result.username}
+Role: ${result.role}
+
+✅ LOGIN WORKS! You can now use the login page.
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="debug-box error">
+❌ FULL LOGIN FAILED:
+
+Status: ${response.status}
+Error: ${typeof result === 'string' ? result : JSON.stringify(result)}
+
+Check console logs for detailed error information.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-box error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function runAllTests() {
+            await checkDatabase();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await createFreshAdmin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testPasswordEncoding();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await directLoginTest();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await fullLoginTest();
+        }
+
+        function clearAllResults() {
+            ['databaseResult', 'adminResult', 'encodingResult', 'directResult', 'fullResult'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+    </script>
+</body>
+</html>
