@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import com.education.chat.repository.QuestionRepository;
 
 @Service
 public class TestService {
@@ -47,37 +48,40 @@ public class TestService {
         }
     }
 
-    public TestAnswer submitAnswer(TestSession session, Question question, String userAnswer, int timeSpent) {
+    public TestAnswer submitAnswer(Long sessionId, Long questionId, String userAnswer, int timeSpent) {
+        TestSession session = testSessionRepository.findById(sessionId).orElseThrow(() -> new RuntimeException("Sesi Tes tidak ditemukan"));
+        Question question = questionRepository.findById(questionId).orElseThrow(() -> new RuntimeException("Soal tidak ditemukan"));
+
         TestAnswer answer = new TestAnswer();
         answer.setTestSession(session);
         answer.setQuestion(question);
         answer.setUserAnswer(userAnswer);
         answer.setTimeSpentSeconds(timeSpent);
-        answer.setCorrect(question.getCorrectAnswer().equals(userAnswer));
+        answer.setCorrect(question.getCorrectAnswer().equalsIgnoreCase(userAnswer));
 
         return testAnswerRepository.save(answer);
     }
 
+
     public TestSession finishTest(Long sessionId) {
         TestSession session = testSessionRepository.findById(sessionId).orElse(null);
-        if (session == null) return null;
+        if (session == null || session.getStatus() == TestSession.SessionStatus.COMPLETED) {
+            return session; // atau throw exception
+        }
 
         session.setEndTime(LocalDateTime.now());
         session.setStatus(TestSession.SessionStatus.COMPLETED);
 
-        // Calculate score
         List<TestAnswer> answers = testAnswerRepository.findByTestSession(session);
-        int correctAnswers = (int) answers.stream().mapToInt(a -> a.isCorrect() ? 1 : 0).sum();
-        
-        session.setCorrectAnswers(correctAnswers);
-        session.setScore((correctAnswers * 100) / session.getTotalQuestions());
+        long correctAnswers = answers.stream().filter(TestAnswer::isCorrect).count();
 
-        // Calculate actual duration
-        long duration = ChronoUnit.MINUTES.between(session.getStartTime(), session.getEndTime());
-        session.setDurationMinutes((int) duration);
+        session.setCorrectAnswers((int) correctAnswers);
+        int score = (session.getTotalQuestions() > 0) ? (int) ((correctAnswers * 100) / session.getTotalQuestions()) : 0;
+        session.setScore(score);
 
         return testSessionRepository.save(session);
     }
+
 
     public List<TestSession> getUserTestHistory(User user) {
         return testSessionRepository.findByUserOrderByStartTimeDesc(user);

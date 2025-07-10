@@ -15,8 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import jakarta.servlet.http.HttpServletRequest; // Tambahkan ini di bagian atas
-
 
 @Configuration
 @EnableWebSecurity
@@ -26,8 +24,10 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -41,35 +41,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/", "/login", "/register", "/api/auth/**").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**").permitAll()
-                        .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/test-login", "/password-fix", "/debug-login").permitAll()
-                        .requestMatchers("/api/test/**", "/api/debug/**", "/api/password-test/**").permitAll()
-                        .requestMatchers("/admin", "/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/tutor/**").hasAnyRole("ADMIN", "TUTOR")
-                        .requestMatchers("/dashboard", "/chat", "/test").authenticated()
-                        .requestMatchers("/api/learning/**", "/api/test/**", "/api/chat/**").authenticated()
-                        .anyRequest().authenticated()
-                )
+        http
+                .csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers -> headers.frameOptions().disable());
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/", "/login", "/register", "/api/auth/**").permitAll() // Pastikan "/" ada di sini
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .anyRequest().authenticated()
+                );
 
-        // Tambahkan filter JWT dengan pengecualian endpoint publik
-        http.addFilterBefore((request, response, chain) -> {
-            HttpServletRequest httpRequest = (HttpServletRequest) request;
-            String path = httpRequest.getServletPath();
-
-            if (path.equals("/login") || path.equals("/register") || path.startsWith("/api/auth")) {
-                chain.doFilter(request, response); // Lewati JWT filter
-            } else {
-                jwtAuthenticationFilter.doFilter(request, response, chain); // Terapkan JWT filter
-            }
-        }, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

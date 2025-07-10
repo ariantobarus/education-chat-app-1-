@@ -1,5 +1,6 @@
 package com.education.chat.controller;
 
+import com.education.chat.dto.TestAnswerRequest;
 import com.education.chat.model.Question;
 import com.education.chat.model.TestSession;
 import com.education.chat.model.User;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import org.springframework.http.HttpStatus;
+import com.education.chat.model.TestAnswer; // <-- PERBAIKAN: Tambahkan import ini
 
 @RestController
 @RequestMapping("/api/test")
@@ -59,6 +62,35 @@ public class TestController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @PostMapping("/submit")
+    public ResponseEntity<?> submitAnswer(@RequestBody TestAnswerRequest answerRequest, Authentication authentication) {
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        TestAnswer answer = testService.submitAnswer(
+                answerRequest.getSessionId(),
+                answerRequest.getQuestionId(),
+                answerRequest.getAnswer(),
+                answerRequest.getTimeSpent()
+        );
+        return ResponseEntity.ok(answer);
+    }
+
+    @PostMapping("/finish/{sessionId}")
+    public ResponseEntity<TestSession> finishTest(@PathVariable Long sessionId, Authentication authentication) {
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        TestSession finishedSession = testService.finishTest(sessionId);
+        if (finishedSession != null) {
+            return ResponseEntity.ok(finishedSession);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
 
     @GetMapping("/history")
     public ResponseEntity<List<TestSession>> getTestHistory(Authentication authentication) {

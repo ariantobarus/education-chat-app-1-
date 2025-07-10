@@ -2,15 +2,18 @@ package com.education.chat.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+// import org.springframework.web.bind.annotation.ResponseBody; // <-- HAPUS IMPORT INI
 
 @Controller
 public class HomeController {
 
     @GetMapping("/")
+    // @ResponseBody // <-- HAPUS ANOTASI INI
     public String home() {
-        return "index";
+        return "index"; // <-- KEMBALIKAN SEPERTI SEMULA
     }
 
+    // ... sisa kode biarkan saja ...
     @GetMapping("/login")
     public String login() {
         return "login";
@@ -20,24 +23,5 @@ public class HomeController {
     public String register() {
         return "register";
     }
-
-    @GetMapping("/dashboard")
-    public String dashboard() {
-        return "dashboard";
-    }
-
-    @GetMapping("/chat")
-    public String chat() {
-        return "chat";
-    }
-
-    @GetMapping("/test")
-    public String test() {
-        return "test";
-    }
-
-    @GetMapping("/admin")
-    public String admin() {
-        return "admin";
-    }
+    // ...dan seterusnya
 }
